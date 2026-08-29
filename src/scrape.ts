@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 // @ts-ignore
 import UserAgent from "user-agents";
+import NodeCache from "node-cache";
 import {
   SCRAPE_URLS,
   fuelTypeMapping,
@@ -33,7 +34,19 @@ function buildHeaders(): Record<string, string> {
   };
 }
 
+const cache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 });
+
+function getCacheKey(city?: string): string {
+  return city ? city.toLowerCase() : "all";
+}
+
 export async function scrapePrices(city?: string): Promise<SectionData[]> {
+  const key = getCacheKey(city);
+  const cached = cache.get<SectionData[]>(key);
+  if (cached) {
+    return cached;
+  }
+
   const normalizedCity = city ? city.toLowerCase() : undefined;
   const urls: string[] = normalizedCity && SCRAPE_URLS[normalizedCity] ? [SCRAPE_URLS[normalizedCity]] : Object.values(SCRAPE_URLS);
 
@@ -47,6 +60,7 @@ export async function scrapePrices(city?: string): Promise<SectionData[]> {
       console.error("Scrape error for", url, e);
     }
   }
+  cache.set(key, allSections);
   return allSections;
 }
 
