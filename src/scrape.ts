@@ -1,4 +1,6 @@
 import * as cheerio from "cheerio";
+// @ts-ignore
+import UserAgent from "user-agents";
 import {
   SCRAPE_URLS,
   fuelTypeMapping,
@@ -6,12 +8,38 @@ import {
   SectionData,
 } from "./selectors";
 
+function randomUA(): string {
+  return new UserAgent().toString();
+}
+
+function randomDelay(min = 300, max = 1200): Promise<void> {
+  return new Promise((r) => setTimeout(r, Math.floor(Math.random() * (max - min + 1)) + min));
+}
+
+function buildHeaders(): Record<string, string> {
+  const ua = randomUA();
+  return {
+    "User-Agent": ua,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,fi;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://www.google.com/",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "cross-site",
+    "Sec-Fetch-User": "?1",
+  };
+}
+
 export async function scrapePrices(city?: string): Promise<SectionData[]> {
   const normalizedCity = city ? city.toLowerCase() : undefined;
   const urls: string[] = normalizedCity && SCRAPE_URLS[normalizedCity] ? [SCRAPE_URLS[normalizedCity]] : Object.values(SCRAPE_URLS);
 
   const allSections: SectionData[] = [];
   for (const url of urls) {
+    await randomDelay(200, 900);
     try {
       const sections = await fetchSections(url);
       allSections.push(...sections);
@@ -24,7 +52,7 @@ export async function scrapePrices(city?: string): Promise<SectionData[]> {
 
 async function fetchSections(url: string): Promise<SectionData[]> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const res = await fetch(url, { headers: buildHeaders(), signal: AbortSignal.timeout(15000) });
     if (!res.ok) {
       console.error("Fetch failed:", res.status);
       return [];
