@@ -1,8 +1,8 @@
 import { ApolloServer } from "@apollo/server";
 import { typeDefs } from "./schema";
-import { scrapePrices } from "./scrape";
-import { Station, FuelPrice } from "./types";
-import { SectionData, PriceRow } from "./selectors";
+import { scrapePrices } from "../scraping/scrape";
+import { Station, FuelPrice } from "../types/types";
+import { SectionData, PriceRow } from "../scraping/selectors";
 
 function parsePrice(row: PriceRow, fuelType: string): FuelPrice {
   const value = parseFloat(row.price);
