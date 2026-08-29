@@ -16,4 +16,5 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run tsc
+      - run: npm run lint
       - run: timeout 10 npm start || true
