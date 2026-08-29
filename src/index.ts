@@ -1,5 +1,6 @@
 import express from "express";
-import { expressMiddleware } from "@apollo/server/express4";
+// we need express middleware for apollo
+import { expressMiddleware } from "@as-integrations/express5";
 import { server } from "./server";
 
 export async function start(): Promise<void> {
