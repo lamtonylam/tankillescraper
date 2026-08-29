@@ -17,7 +17,7 @@
     "@as-integrations/express5": "^1.0.0",
     "cheerio": "^1.0.0",
     "express": "^5.0.0",
-    "graphql": "^16.8.0",
+    "graphql": "^17.0.0",
     "graphql-tag": "^2.12.0",
     "node-cache": "^5.1.2",
     "user-agents": "^2.1.167"
