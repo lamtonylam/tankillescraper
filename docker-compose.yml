@@ -7,3 +7,10 @@ services:
       - SCRAPE_URL=https://www.tankille.fi/vantaa/
       - PORT=4000
     restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+        - action: rebuild
+          path: ./package.json
