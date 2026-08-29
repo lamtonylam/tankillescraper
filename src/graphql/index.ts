@@ -15,5 +15,3 @@ export async function start(): Promise<void> {
     console.log(`App server running at http://localhost:${PORT}/graphql`);
   });
 }
-
-start();
