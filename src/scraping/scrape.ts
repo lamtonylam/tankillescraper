@@ -63,7 +63,7 @@ export async function scrapePrices(city?: string): Promise<SectionData[]> {
   return allSections;
 }
 
-async function fetchSections(url: string): Promise<SectionData[]> {
+export async function fetchSections(url: string): Promise<SectionData[]> {
   try {
     const res = await fetch(url, { headers: buildHeaders(), signal: AbortSignal.timeout(15000) });
     if (!res.ok) {

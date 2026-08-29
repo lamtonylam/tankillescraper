@@ -1,0 +1,116 @@
+name: Daily Scraper Health Check
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Check scraper
+        id: scraper-check
+        run: |
+          node << 'EOF'
+          const { fetchSections } = require("./dist/scraping/scrape.js");
+          const { SCRAPE_URLS, fuelTypeMapping } = require("./dist/scraping/selectors.js");
+          const cheerio = require("cheerio");
+
+          function buildHeaders() {
+            const UserAgent = require("user-agents");
+            const ua = new UserAgent().toString();
+            return {
+              "User-Agent": ua,
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.9,fi;q=0.8",
+              "Accept-Encoding": "gzip, deflate, br",
+              "Referer": "https://www.google.com/",
+              "Connection": "keep-alive",
+              "Upgrade-Insecure-Requests": "1",
+              "Sec-Fetch-Dest": "document",
+              "Sec-Fetch-Mode": "navigate",
+              "Sec-Fetch-Site": "cross-site",
+              "Sec-Fetch-User": "?1",
+            };
+          }
+
+          async function check() {
+            const errors = [];
+            for (const [city, url] of Object.entries(SCRAPE_URLS)) {
+              console.log("Checking " + city + ": " + url);
+              let html;
+              try {
+                const res = await fetch(url, { headers: buildHeaders(), signal: AbortSignal.timeout(15000) });
+                if (!res.ok) {
+                  errors.push("Fetch failed for " + city + " (" + url + "): HTTP " + res.status);
+                  continue;
+                }
+                html = await res.text();
+              } catch (e) {
+                errors.push("Fetch error for " + city + " (" + url + "): " + (e.message || e));
+                continue;
+              }
+              const $ = cheerio.load(html);
+              for (const [id, fuelType] of Object.entries(fuelTypeMapping)) {
+                if ($("#" + id).length === 0) {
+                  errors.push("Selector missing for " + city + " (" + url + "): #" + id + " (" + fuelType + ")");
+                }
+              }
+              try {
+                const sections = await fetchSections(url);
+                const sectionMap = new Map();
+                for (const s of sections) sectionMap.set(s.fuelType, s);
+                for (const [id, fuelType] of Object.entries(fuelTypeMapping)) {
+                  const section = sectionMap.get(fuelType);
+                  if (!section) continue;
+                  if (section.rows.length === 0) {
+                    errors.push("Empty rows for " + city + " (" + url + "): " + fuelType + " (selector #" + id + " present but all rows filtered out)");
+                  }
+                }
+              } catch (e) {
+                errors.push("fetchSections error for " + city + " (" + url + "): " + (e.message || e));
+              }
+            }
+            if (errors.length > 0) {
+              console.error("\nFAILURES:");
+              for (const err of errors) console.error(" - " + err);
+              const fs = require("fs");
+              fs.writeFileSync("scrape-errors.log", errors.join("\n") + "\n");
+              process.exit(1);
+            }
+            console.log("\nAll checks passed.");
+          }
+          check();
+          EOF
+      - name: Create failure issue
+        if: failure() && steps.scraper-check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let errors = '';
+            try {
+              errors = fs.readFileSync('scrape-errors.log', 'utf8');
+            } catch (e) {
+              errors = 'No detailed error log found. See workflow logs for details.';
+            }
+            const title = errors ? `Scraper broken: ${errors.split('\n')[0]}` : 'Daily scraper check failed';
+            const body = `The daily scraper check failed.\n\n**Errors:**\n\`\`\`\n${errors}\n\`\`\`\n\n**Workflow:** ${context.payload.repository.html_url}/actions/runs/${context.runId}\n`;
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title.slice(0, 200),
+              body: body,
+            });
