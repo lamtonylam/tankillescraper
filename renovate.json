@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "prCreation": "immediate",
+    "commitMessageSuffix": "[SECURITY]",
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Batch all non-security minor/patch updates into a single PR",
+      "groupName": "Batched non-security updates",
+      "groupSlug": "batched-non-security-updates",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchPackageNames": ["*"],
+      "schedule": ["after 10pm every weekday", "before 5am every weekday", "every weekend"]
+    }
+  ]
+}
