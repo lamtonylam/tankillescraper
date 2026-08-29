@@ -1,11 +1,10 @@
-### Tankille.fi Scraper and GraphQL API
+# Tankille.fi Scraper and GraphQL API
 
-# Quickstart
+### Quickstart
 
 ```bash
-npm install
-npm run build
-npm start
+npm i
+npm run dev
 ```
 
 Or with Docker:
