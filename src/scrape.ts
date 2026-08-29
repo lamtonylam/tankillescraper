@@ -1,5 +1,4 @@
 import * as cheerio from "cheerio";
-// @ts-expect-error no types for user-agents
 import UserAgent from "user-agents";
 import NodeCache from "node-cache";
 import {
