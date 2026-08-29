@@ -1,0 +1,25 @@
+{
+  "name": "tankille-scraper-app",
+  "version": "1.0.0",
+  "description": "Combined scraper + GraphQL for tankille.fi gas prices",
+  "main": "dist/server.js",
+  "scripts": {
+    "tsc": "tsc",
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.9.0",
+    "cheerio": "^1.0.0",
+    "express": "^4.19.0",
+    "graphql": "^16.8.0",
+    "graphql-tag": "^2.12.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.3.0"
+  }
+}

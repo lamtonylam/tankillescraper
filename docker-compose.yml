@@ -1,0 +1,9 @@
+services:
+  tankille-app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - SCRAPE_URL=https://www.tankille.fi/vantaa/
+      - PORT=4000
+    restart: unless-stopped
