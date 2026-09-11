@@ -9,6 +9,10 @@
   },
   "packageRules": [
     {
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
       "description": "Batch all non-security minor/patch updates into a single PR",
       "groupName": "Batched non-security updates",
       "groupSlug": "batched-non-security-updates",
